@@ -6,7 +6,7 @@ function LoginPage({
     password, 
     setPassword, 
     setIsLoginSuccessful, 
-    logInVisible,
+    setIsLoginVisible,
     setShowLoginSuccess,
     setShowLoginFailed }) {
 
@@ -23,7 +23,7 @@ function LoginPage({
             });
             if(response.ok) {
                 setIsLoginSuccessful(true);
-                logInVisible(false);
+                setIsLoginVisible(false);
                 setShowLoginSuccess(true);
             } else {
                 setShowLoginFailed(true);
@@ -64,7 +64,7 @@ function LoginPage({
             Log In
             </button>
             <button 
-            onClick={() => logInVisible(false)}
+            onClick={() => setIsLoginVisible(false)}
             className="text-sm text-gray-400 hover:text-purple-400 transition-colors"
             >
             Cancel

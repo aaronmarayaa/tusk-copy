@@ -6,7 +6,7 @@ import SignUpPage from "./SignUpPage";
 import { useState } from "react";
 import { LogoutModal, SignUpModalSuccess, SignUpModalFailed, LoginModalSuccess, LoginModalFailed, LogoutModalSuccess  } from "../Components/Modals";
 
-function Navigation({ isLoginVisible, logInVisible, setIsSignUpVisible, isSignUpVisible, signUpVisible, isLoginSuccessful, setIsLoginSuccessful, setUser }) {
+function Navigation({ isLoginVisible, setIsLoginVisible, isSignUpVisible, setIsSignUpVisible, isLoginSuccessful, setIsLoginSuccessful, setUser }) {
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
     const [username, setUserName] = useState('');
@@ -52,15 +52,15 @@ function Navigation({ isLoginVisible, logInVisible, setIsSignUpVisible, isSignUp
                 {!isLoginVisible && !isSignUpVisible && (
                     <article>
                         {isLoginSuccessful ? (
-                            <button onClick={() => setShowLogoutModal(true)} className="bg-purple-600 text-white rounded-md px-3 py-2 hover:bg-purple-700 transition-colors w-full">
+                            <button onClick={() => setShowLogoutModal(true)} className="bg-red-600 text-white rounded-md px-3 py-2 hover:bg-purple-700 transition-colors w-full">
                                 Log out
                             </button>
                         ) : (
                             <div className='flex gap-4'>
-                                <button onClick={() => signUpVisible(true)} className="text-sm text-white border border-purple-500 px-3 py-1 rounded hover:bg-purple-900/50 transition-colors">
+                                <button onClick={() => setIsSignUpVisible(true)} className="text-sm text-white border border-purple-500 px-3 py-1 rounded hover:bg-purple-900/50 transition-colors">
                                     Sign Up
                                 </button>
-                                <button onClick={() => logInVisible(true)} className="text-sm text-white bg-purple-600 px-3 py-1 rounded hover:bg-purple-700 transition-colors">
+                                <button onClick={() => setIsLoginVisible(true)} className="text-sm text-white bg-purple-600 px-3 py-1 rounded hover:bg-purple-700 transition-colors">
                                     Log In
                                 </button>
                             </div>
@@ -69,7 +69,7 @@ function Navigation({ isLoginVisible, logInVisible, setIsSignUpVisible, isSignUp
                 )}
 
                 {(isLoginVisible || isSignUpVisible) && (
-                    <div className="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-2 border-white">
+                    <div className="fixed inset-0 bg-gray-800/50 backdrop-blur-xs flex items-center justify-center z-2 border-white">
                         <div className="bg-gray-900 rounded-lg p-8 max-w-md w-full border border-purple-900/50">
                             {isSignUpVisible && (
                                 <SignUpPage
@@ -80,7 +80,6 @@ function Navigation({ isLoginVisible, logInVisible, setIsSignUpVisible, isSignUp
                                     username={username}
                                     setUserName={setUserName}
                                     setIsSignUpVisible={setIsSignUpVisible}
-                                    signUpVisible={signUpVisible}
                                     setShowSignUpSuccess={setShowSignUpSuccess}
                                     setShowSignUpFailed={setShowSignUpFailed}
                                 />
@@ -93,7 +92,7 @@ function Navigation({ isLoginVisible, logInVisible, setIsSignUpVisible, isSignUp
                                     password={password}
                                     setPassword={setPassword}
                                     setIsLoginSuccessful={setIsLoginSuccessful}
-                                    logInVisible={logInVisible}
+                                    setIsLoginVisible={setIsLoginVisible}
                                     setShowLoginSuccess={setShowLoginSuccess}
                                     setShowLoginFailed={setShowLoginFailed}
                                 />

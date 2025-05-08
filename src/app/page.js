@@ -18,24 +18,23 @@ function App() {
   }, []);
 
   const signUpVisible = (visible) => {
-    setIsSignUpVisible(visible);
-    setIsMainContentVisible(!visible);
-}
+      setIsSignUpVisible(visible);
+      setIsMainContentVisible(!visible);
+  }
 
-const logInVisible = (visible) => {
-    setIsLoginVisible(visible);
-    setIsMainContentVisible(!visible);
-}
+  const logInVisible = (visible) => {
+      setIsLoginVisible(visible);
+      setIsMainContentVisible(!visible);
+  }
 
   return (
     <main>
       <div>
         <Navigation 
           isLoginVisible={isLoginVisible} 
-          logInVisible={logInVisible}
-          setIsSignUpVisible={setIsSignUpVisible}
+          setIsLoginVisible={setIsLoginVisible}
           isSignUpVisible={isSignUpVisible} 
-          signUpVisible={signUpVisible}
+          setIsSignUpVisible={setIsSignUpVisible}
           isLoginSuccessful={isLoginSuccessful}
           setIsLoginSuccessful={setIsLoginSuccessful}
           setUser={setUser}
