@@ -7,9 +7,6 @@ import { useState } from "react";
 import { LogoutModal, SignUpModalSuccess, SignUpModalFailed, LoginModalSuccess, LoginModalFailed, LogoutModalSuccess  } from "../Components/Modals";
 
 function Navigation({ isLoginVisible, setIsLoginVisible, isSignUpVisible, setIsSignUpVisible, isLoginSuccessful, setIsLoginSuccessful, setUser }) {
-    const [email, setEmail] = useState('');
-    const [password, setPassword] = useState('');
-    const [username, setUserName] = useState('');
     const [showLogoutModal, setShowLogoutModal] = useState(false);
     const [showSignUpSuccess, setShowSignUpSuccess] = useState(false);
     const [showSignUpFailed, setShowSignUpFailed] = useState(false);
@@ -39,7 +36,7 @@ function Navigation({ isLoginVisible, setIsLoginVisible, isSignUpVisible, setIsS
     };
     
     return(
-        <main className="flex w-full justify-between items-center p-4 absolute z-1" style={{ background: 'transparent' }} >
+        <main className="flex fixed w-full justify-between items-center p-4 absolute z-1" style={{ background: 'transparent' }} >
             <section className="flex items-center">
                 <Link href="/" className="text-white text-lg font-bold mr-4" title='Chatbot of your needs'>Tusk AI</Link>
 
@@ -73,12 +70,6 @@ function Navigation({ isLoginVisible, setIsLoginVisible, isSignUpVisible, setIsS
                         <div className="bg-gray-900 rounded-lg p-8 max-w-md w-full border border-purple-900/50">
                             {isSignUpVisible && (
                                 <SignUpPage
-                                    email={email} 
-                                    setEmail={setEmail}
-                                    password={password}
-                                    setPassword={setPassword}
-                                    username={username}
-                                    setUserName={setUserName}
                                     setIsSignUpVisible={setIsSignUpVisible}
                                     setShowSignUpSuccess={setShowSignUpSuccess}
                                     setShowSignUpFailed={setShowSignUpFailed}
@@ -87,10 +78,6 @@ function Navigation({ isLoginVisible, setIsLoginVisible, isSignUpVisible, setIsS
 
                             {isLoginVisible && (
                                 <LoginPage 
-                                    email={email} 
-                                    setEmail={setEmail}
-                                    password={password}
-                                    setPassword={setPassword}
                                     setIsLoginSuccessful={setIsLoginSuccessful}
                                     setIsLoginVisible={setIsLoginVisible}
                                     setShowLoginSuccess={setShowLoginSuccess}
