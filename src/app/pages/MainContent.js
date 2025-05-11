@@ -35,7 +35,6 @@ function MainContent({ user, setUser, isLoginSuccessful }) {
 
     useEffect(() => {
         if (isLoginSuccessful) {
-            fetchUser();
             fetchChatSessions();
             setChatHistory([]);
         } else {
@@ -43,25 +42,6 @@ function MainContent({ user, setUser, isLoginSuccessful }) {
             setChats([]);
         }
     }, [isLoginSuccessful]);
-
-    const fetchUser = async () => {
-        try {
-        const response = await fetch('https://stale-melodie-aaronmarayaa-f2e40747.koyeb.app/api/auth/userHome', {
-            method: 'GET',
-            credentials: 'include',
-        });
-        const data = await response.json();
-        console.log(data);
-        if (response.ok) {
-            setUser(data);
-            console.log("data", data);
-        } else {
-            router.push('/');
-        }
-        } catch (error) {
-        console.error('Error fetching user:', error);
-        }
-    };
 
     const analyzePdfNoLogin = async (e) => {
         e.preventDefault();
@@ -179,28 +159,25 @@ function MainContent({ user, setUser, isLoginSuccessful }) {
         }
     };
 
-    if (isLoginSuccessful) {
-        if(!user) {
-            return <p className="text-center text-gray-500">Checking authentication...</p>;
-        }
+    if (isLoginSuccessful && !user) {
+        return <p className="text-center text-gray-500">this {user} Checking authentication...</p>;
     }
 
     return (
         <main className="flex items-center justify-center flex-grow p-4 bg-gradient-to-b from-black to-gray-900 min-h-screen">
             <section className='flex w-full mt-15  transition-all duration-300 ease-in-out'>
                 <aside className={`h-full  relative self-start flex flex-col transition-all duration-300 ease-in-out overflow-hidden ${isSidebarOpen ? 'w-64' : 'w-0 p-0'}`}>
-                    <button
-                        onClick={() => setIsSidebarOpen(false)}
-                        className="text-xs w-7 text-white hover:text-red-400 mb-4"
-                    >
-                        <img src={'/closeSidebar.png'} className='w-7'/>
-                    </button>
-                    <button className="text-sm w-50 text-white border border-purple-500 px-6 py-1 rounded hover:bg-purple-900/50 transition-colors">
-                        New Chat
-                    </button>
-                    <button className="text-sm w-50 text-white border border-purple-500 px-6 py-1 rounded hover:bg-purple-900/50 transition-colors">
-                        New Chat
-                    </button>
+                    <div className='w-50 flex'>
+                        <button
+                            onClick={() => setIsSidebarOpen(false)}
+                            className="text-xs w-7 text-white hover:text-red-400 mb-4"
+                        >
+                            <img src={'/closeSidebar.png'} className='w-7'/>
+                        </button>
+                            <button className="text-sm w-10 text-white border border-purple-500 px-6 py-1 rounded hover:bg-purple-900/50 transition-colors">
+                                New Chat
+                            </button>
+                    </div>
                     {chats.map((session, index) => (
                         <div key={index} className='overflow-hidden flex items-center'>
                         <span
@@ -355,7 +332,7 @@ function MainContent({ user, setUser, isLoginSuccessful }) {
                                         }}
                                         >
                                         {entry.answer}
-                                        </ReactMarkdown>
+                                    </ReactMarkdown>
                                     </div>
                                 </div>
                                 ))}

@@ -7,29 +7,47 @@ import MainContent from './Pages/MainContent';
 function App() {
   const [isLoginVisible, setIsLoginVisible] = useState(false);
   const [isSignUpVisible, setIsSignUpVisible] = useState(false);
-  const [isMainContentVisible, setIsMainContentVisible] = useState(true);
-  const [isLoginSuccessful, setIsLoginSuccessful] = useState(false);
-
   const [user, setUser] = useState(null);
+  const [isLoginSuccessful, setIsLoginSuccessful] = useState(false);
+  const [isCheckingAuth, setIsCheckingAuth] = useState(true);
 
   useEffect(() => {
-    setIsLoginVisible();
-    setIsSignUpVisible();
+    fetchUser();
   }, []);
 
-  const signUpVisible = (visible) => {
-      setIsSignUpVisible(visible);
-      setIsMainContentVisible(!visible);
+  const fetchUser = async () => {
+    try {
+    const response = await fetch('https://stale-melodie-aaronmarayaa-f2e40747.koyeb.app/api/auth/userHome', {
+        method: 'GET',
+        credentials: 'include',
+    });
+    const data = await response.json();
+    if (response.ok) {
+        setUser(data);
+        setIsLoginSuccessful(true);
+        console.log(data);
+      } else {
+        setIsLoginSuccessful(true);
+        console.log("login failed")
+    }
+    } catch (error) {
+    console.error('Error fetching user:', error);
+    } finally {
+      setIsCheckingAuth(false);
+    }
+  };
+
+  if (isCheckingAuth) {
+    return <div className='w-full text-center'>Loading...</div>; 
   }
 
-  const logInVisible = (visible) => {
-      setIsLoginVisible(visible);
-      setIsMainContentVisible(!visible);
+  if (isLoginSuccessful && !user) {
+    return <div className="w-full text-center">Login succeeded, but no user data. Please refresh.</div>;
   }
 
   return (
     <main>
-      <div>
+      <section>
         <Navigation 
           isLoginVisible={isLoginVisible} 
           setIsLoginVisible={setIsLoginVisible}
@@ -38,15 +56,16 @@ function App() {
           isLoginSuccessful={isLoginSuccessful}
           setIsLoginSuccessful={setIsLoginSuccessful}
           setUser={setUser}
+          fetchUser={fetchUser}
         />
-      </div>
-      <div style={{ display: isMainContentVisible ? 'block' : 'none' }}>
+      </section>
+      <section>
         <MainContent
           user={user}
           setUser={setUser}
           isLoginSuccessful={isLoginSuccessful} 
         />
-      </div>
+      </section>
     </main>
   );
 }

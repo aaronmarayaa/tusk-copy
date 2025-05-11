@@ -6,7 +6,7 @@ import SignUpPage from "./SignUpPage";
 import { useState } from "react";
 import { LogoutModal, SignUpModalSuccess, SignUpModalFailed, LoginModalSuccess, LoginModalFailed, LogoutModalSuccess  } from "../Components/Modals";
 
-function Navigation({ isLoginVisible, setIsLoginVisible, isSignUpVisible, setIsSignUpVisible, isLoginSuccessful, setIsLoginSuccessful, setUser }) {
+function Navigation({ isLoginVisible, setIsLoginVisible, isSignUpVisible, setIsSignUpVisible, isLoginSuccessful, setIsLoginSuccessful, setUser, fetchUser }) {
     const [showLogoutModal, setShowLogoutModal] = useState(false);
     const [showSignUpSuccess, setShowSignUpSuccess] = useState(false);
     const [showSignUpFailed, setShowSignUpFailed] = useState(false);
@@ -78,6 +78,7 @@ function Navigation({ isLoginVisible, setIsLoginVisible, isSignUpVisible, setIsS
                                     setIsLoginVisible={setIsLoginVisible}
                                     setShowLoginSuccess={setShowLoginSuccess}
                                     setShowLoginFailed={setShowLoginFailed}
+                                    fetchUser={fetchUser}
                                 />
                             )}
                         </div>
