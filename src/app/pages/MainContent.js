@@ -2,10 +2,10 @@
 
 import { Paperclip, Send, X, Bot } from 'lucide-react';
 import { useState, useRef, useEffect } from 'react';
-import ReactMarkdown from 'react-markdown'
+import MarkdownResponse from '../Components/MarkdownResponse';
 import { useRouter } from 'next/navigation';
 
-function MainContent({ user, setUser, isLoginSuccessful }) {
+function MainContent({ user, setUser, isLoginSuccessful, setIsLoginSuccessful }) {
     const [chatHistory, setChatHistory] = useState([]);
     const [pdfFile, setPdfFile] = useState(null);
     const [loading, setLoading] = useState(false);
@@ -13,6 +13,7 @@ function MainContent({ user, setUser, isLoginSuccessful }) {
     const [chats, setChats] = useState([]);
     const [currentTitle, setCurrentTitle] = useState('');
     const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+    const [isCheckingAuth, setIsCheckingAuth] = useState(true);
 
     const textareaRef = useRef(null);
     const bottomRef = useRef(null);
@@ -37,11 +38,40 @@ function MainContent({ user, setUser, isLoginSuccessful }) {
         if (isLoginSuccessful) {
             fetchChatSessions();
             setChatHistory([]);
+            startNewChatSession();
+            fetchUser();
         } else {
             setChatHistory([]);
             setChats([]);
         }
     }, [isLoginSuccessful]);
+    
+    
+    useEffect(() => {
+        fetchUser();
+    }, []);
+
+    const fetchUser = async () => {
+        try {
+        const response = await fetch('https://stale-melodie-aaronmarayaa-f2e40747.koyeb.app/api/auth/userHome', {
+            method: 'GET',
+            credentials: 'include',
+        });
+        const data = await response.json();
+        if (response.ok) {
+            setUser(data);
+            console.log(data);
+            setIsLoginSuccessful(true);
+        } else {
+            setIsLoginSuccessful(false);
+            console.log("login failed")
+        }
+        } catch (error) {
+            console.error('Error fetching user:', error);
+        } finally {
+            setIsCheckingAuth(false);
+        }
+    };
 
     const analyzePdfNoLogin = async (e) => {
         e.preventDefault();
@@ -78,24 +108,23 @@ function MainContent({ user, setUser, isLoginSuccessful }) {
     async function startNewChatSession() {
         const lastSession = chats[chats.length - 1];
         if (lastSession && lastSession.length === 0) {
-        setChatHistory(lastSession);
-        return;
+            setChatHistory(lastSession);
+            return;
         }
         try {
-        const response = await fetch('https://stale-melodie-aaronmarayaa-f2e40747.koyeb.app/api/chats/new-chat', { 
-            method: 'POST',
-            credentials: 'include'
-        });
-        if (!response.ok) throw new Error('Session creation failed');
-        setChatHistory([]);
-        fetchChatSessions();
+            const response = await fetch('https://stale-melodie-aaronmarayaa-f2e40747.koyeb.app/api/chats/new-chat', { 
+                method: 'POST',
+                credentials: 'include'
+            });
+            if (!response.ok) throw new Error('Session creation failed');
+            setChatHistory([]);
+            fetchChatSessions();
         } catch (error) {
-        console.error('Error starting new session:', error);
+            console.error('Error starting new session:', error);
         }
     }
 
     async function fetchChatSessions() {
-        
             try {
             const response = await fetch('https://stale-melodie-aaronmarayaa-f2e40747.koyeb.app/api/chats/getChat', {
                 method: 'GET',
@@ -160,22 +189,27 @@ function MainContent({ user, setUser, isLoginSuccessful }) {
     };
 
     if (isLoginSuccessful && !user) {
-        return <p className="text-center text-gray-500">this {user} Checking authentication...</p>;
+        return <p className="text-center text-gray-500">Checking authentication...</p>;
     }
+
+    if (isCheckingAuth) {
+        return <div className='w-full text-center text-gray-500'>Loading...</div>; 
+    }
+    
 
     return (
         <main className="flex items-center justify-center flex-grow p-4 bg-gradient-to-b from-black to-gray-900 min-h-screen">
             <section className='flex w-full mt-15  transition-all duration-300 ease-in-out'>
-                <aside className={`h-full  relative self-start flex flex-col transition-all duration-300 ease-in-out overflow-hidden ${isSidebarOpen ? 'w-64' : 'w-0 p-0'}`}>
+                <aside className={`h-full relative self-start flex flex-col transition-all duration-300 ease-in-out overflow-hidden ${isSidebarOpen ? 'w-64' : 'w-0 p-0'}`}>
                     <div className='w-50 flex'>
                         <button
                             onClick={() => setIsSidebarOpen(false)}
-                            className="text-xs w-7 text-white hover:text-red-400 mb-4"
+                            className="text-xs w-7 h-full text-white hover:text-red-400 mb-4"
                         >
-                            <img src={'/closeSidebar.png'} className='w-7'/>
+                            <img src={'/closeSidebar.png'} className='w-7 h-full'/>
                         </button>
-                            <button className="text-sm w-10 text-white border border-purple-500 px-6 py-1 rounded hover:bg-purple-900/50 transition-colors">
-                                New Chat
+                            <button onClick={startNewChatSession} className="text-sm w-40 h-9 flex flex-col">
+                                <img src={'/images/chat.png'} className='w-7 h-7 self-end'/>
                             </button>
                     </div>
                     {chats.map((session, index) => (
@@ -230,109 +264,7 @@ function MainContent({ user, setUser, isLoginSuccessful }) {
                                 <div key={index} className="py-2 flex flex-col w-full">
                                     <p className='max-w-[75%] px-4 py-3 m-5 rounded-xl self-end bg-purple-600 text-white'><strong></strong> {entry.question}</p>
                                     <div className='w-175 wrap-break-word text-pretty px-4 py-3 self-start text-white'><strong>🤖Tusk:</strong> 
-                                    <ReactMarkdown
-                                        components={{
-                                            p: ({node, ...props}) => (
-                                            <p className="break-words mb-4 leading-relaxed text-gray-100">
-                                                {props.children}
-                                            </p>
-                                            ),
-                                            
-                                            code: ({node, ...props}) => (
-                                            <code className="break-words font-mono text-sm bg-gray-800/70 text-purple-200 px-1.5 py-0.5 rounded">
-                                                {props.children}
-                                            </code>
-                                            ),
-                                            
-                                            pre: ({node, ...props}) => (
-                                            <div className="relative my-4 rounded-lg overflow-hidden border border-gray-600/50 bg-gray-900/80">
-                                                <div className="flex items-center px-4 py-2 bg-gray-800/80 border-b border-gray-700">
-                                                    <div className="flex space-x-2">
-                                                        <div className="w-3 h-3 rounded-full bg-red-500"></div>
-                                                        <div className="w-3 h-3 rounded-full bg-yellow-500"></div>
-                                                        <div className="w-3 h-3 rounded-full bg-green-500"></div>
-                                                    </div>
-                                                </div>
-                                                <pre className="p-4 overflow-x-auto text-sm font-mono text-gray-100">
-                                                {props.children}
-                                                </pre>
-                                            </div>
-                                            ),
-                                            
-                                            // Links with nice hover effect
-                                            a: ({node, ...props}) => (
-                                            <a 
-                                                href={props.href} 
-                                                className="break-words underline text-blue-400 hover:text-blue-300 transition-colors duration-200"
-                                                target="_blank"
-                                                rel="noopener noreferrer"
-                                            >
-                                                {props.children}
-                                            </a>
-                                            ),
-                                            
-                                            // Headings with gradient text
-                                            h1: ({node, ...props}) => (
-                                            <h1 className="text-3xl font-bold mt-8 mb-4 bg-gradient-to-r from-blue-400 to-purple-500 bg-clip-text text-transparent">
-                                                {props.children}
-                                            </h1>
-                                            ),
-                                            h2: ({node, ...props}) => (
-                                            <h2 className="text-2xl font-bold mt-6 mb-3 bg-gradient-to-r from-blue-400 to-purple-400 bg-clip-text text-transparent">
-                                                {props.children}
-                                            </h2>
-                                            ),
-                                            h3: ({node, ...props}) => (
-                                            <h3 className="text-xl font-semibold mt-4 mb-2 text-purple-300">
-                                                {props.children}
-                                            </h3>
-                                            ),
-                                            
-                                            // Lists with better spacing
-                                            ul: ({node, ...props}) => (
-                                            <ul className="list-disc pl-6 mb-4 space-y-1 text-gray-200">
-                                                {props.children}
-                                            </ul>
-                                            ),
-                                            ol: ({node, ...props}) => (
-                                            <ol className="list-decimal pl-6 mb-4 space-y-1 text-gray-200">
-                                                {props.children}
-                                            </ol>
-                                            ),
-                                            
-                                            // Blockquotes with elegant styling
-                                            blockquote: ({node, ...props}) => (
-                                            <blockquote className="border-l-4 border-purple-500 pl-4 my-4 italic text-gray-300 bg-gray-800/30 py-2 rounded-r">
-                                                {props.children}
-                                            </blockquote>
-                                            ),
-                                            
-                                            // Tables with clean styling
-                                            table: ({node, ...props}) => (
-                                            <div className="overflow-x-auto my-4 rounded-lg border border-gray-700">
-                                                <table className="min-w-full divide-y divide-gray-700">
-                                                {props.children}
-                                                </table>
-                                            </div>
-                                            ),
-                                            th: ({node, ...props}) => (
-                                            <th className="px-4 py-2 text-left text-sm font-semibold text-purple-300 bg-gray-800/80">
-                                                {props.children}
-                                            </th>
-                                            ),
-                                            td: ({node, ...props}) => (
-                                            <td className="px-4 py-2 text-sm text-gray-200 border-t border-gray-700">
-                                                {props.children}
-                                            </td>
-                                            ),
-                                            
-                                            hr: ({node, ...props}) => (
-                                            <hr className="my-6 border-t-2 border-transparent bg-gradient-to-r from-transparent via-purple-500 to-transparent h-0.5" />
-                                            )
-                                        }}
-                                        >
-                                        {entry.answer}
-                                    </ReactMarkdown>
+                                        <MarkdownResponse entry={entry}/>
                                     </div>
                                 </div>
                                 ))}

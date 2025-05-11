@@ -6,8 +6,7 @@ function LoginPage({
     setIsLoginSuccessful, 
     setIsLoginVisible,
     setShowLoginSuccess,
-    setShowLoginFailed,
-    fetchUser}) {
+    setShowLoginFailed}) {
     
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
@@ -25,7 +24,6 @@ function LoginPage({
                 credentials: 'include',
             });
             if(response.ok) {
-                await fetchUser();
                 setIsLoginSuccessful(true);
                 setIsLoginVisible(false);
                 setShowLoginSuccess(true);
