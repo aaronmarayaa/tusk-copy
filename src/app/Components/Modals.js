@@ -26,6 +26,37 @@ export function LogoutModal({ setShowLogoutModal, handleLogout }) {
     );
 }
 
+export function ChatDeleteModal({ onConfirm, onCancel }) {
+    return (
+        <main className="fixed inset-0 bg-gray-800/50 backdrop-blur-xs flex items-center justify-center z-50">
+            <section className="bg-gray-800 p-6 rounded-lg border border-red-600 text-white max-w-sm w-full">
+                <h2 className="text-xl font-semibold mb-4">Delete Chat</h2>
+                <p className="mb-6">Are you sure you want to delete this chat?</p>
+                <div className="flex justify-end gap-4">
+                    <button
+                        onClick={onCancel}
+                        className="px-4 py-2 rounded bg-gray-600 hover:bg-gray-700"
+                    >
+                        Cancel
+                    </button>
+                    <button
+                        onClick={onConfirm}
+                        className="px-4 py-2 rounded bg-red-600 hover:bg-red-700"
+                    >
+                        Delete
+                    </button>
+                </div>
+            </section>
+        </main>
+    );
+}
+
+export const DeleteModalSuccess = ({ onClose }) => {
+    useAutoClose(onClose);
+    return (
+        <ModalContent icon="/check.png" text="Chat Deleted" onClose={onClose} />
+    );
+};
 
 export const SignUpModalSuccess = ({ onClose }) => {
     useAutoClose(onClose);

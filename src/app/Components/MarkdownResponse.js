@@ -30,7 +30,6 @@ export default function MarkdownResponse({ entry }) {
             </div>
             ),
             
-            // Links with nice hover effect
             a: ({node, ...props}) => (
             <a 
                 href={props.href} 
@@ -42,7 +41,6 @@ export default function MarkdownResponse({ entry }) {
             </a>
             ),
             
-            // Headings with gradient text
             h1: ({node, ...props}) => (
             <h1 className="text-3xl font-bold mt-8 mb-4 bg-gradient-to-r from-blue-400 to-purple-500 bg-clip-text text-transparent">
                 {props.children}
@@ -59,7 +57,6 @@ export default function MarkdownResponse({ entry }) {
             </h3>
             ),
             
-            // Lists with better spacing
             ul: ({node, ...props}) => (
             <ul className="list-disc pl-6 mb-4 space-y-1 text-gray-200">
                 {props.children}
@@ -71,14 +68,12 @@ export default function MarkdownResponse({ entry }) {
             </ol>
             ),
             
-            // Blockquotes with elegant styling
             blockquote: ({node, ...props}) => (
             <blockquote className="border-l-4 border-purple-500 pl-4 my-4 italic text-gray-300 bg-gray-800/30 py-2 rounded-r">
                 {props.children}
             </blockquote>
             ),
             
-            // Tables with clean styling
             table: ({node, ...props}) => (
             <div className="overflow-x-auto my-4 rounded-lg border border-gray-700">
                 <table className="min-w-full divide-y divide-gray-700">

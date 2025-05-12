@@ -3,7 +3,8 @@
 import { Paperclip, Send, X, Bot } from 'lucide-react';
 import { useState, useRef, useEffect } from 'react';
 import MarkdownResponse from '../Components/MarkdownResponse';
-import { useRouter } from 'next/navigation';
+import Sidebar from '../Components/Sidebar';
+import { ChatDeleteModal, DeleteModalSuccess } from '../Components/Modals';
 
 function MainContent({ user, setUser, isLoginSuccessful, setIsLoginSuccessful }) {
     const [chatHistory, setChatHistory] = useState([]);
@@ -13,18 +14,20 @@ function MainContent({ user, setUser, isLoginSuccessful, setIsLoginSuccessful })
     const [chats, setChats] = useState([]);
     const [currentTitle, setCurrentTitle] = useState('');
     const [isSidebarOpen, setIsSidebarOpen] = useState(false);
-    const [isCheckingAuth, setIsCheckingAuth] = useState(true);
+    const [showDeleteModal, setShowDeleteModal] = useState(false);
+    const [showDeleteSuccess, setShowDeleteSuccess] = useState(false);
+    const [selectedChatIndex, setSelectedChatIndex] = useState(null);
+    const [hasInitialized, setHasInitialized] = useState(false);
+
 
     const textareaRef = useRef(null);
     const bottomRef = useRef(null);
     const fileInputRef = useRef(null);
 
-    const router = useRouter();
-
     useEffect(() => {
         if (textareaRef.current) {
-        textareaRef.current.style.height = 'auto';
-        textareaRef.current.style.height = `${textareaRef.current.scrollHeight}px`;
+            textareaRef.current.style.height = 'auto';
+            textareaRef.current.style.height = `${textareaRef.current.scrollHeight}px`;
         }
     }, [question]);
 
@@ -35,17 +38,28 @@ function MainContent({ user, setUser, isLoginSuccessful, setIsLoginSuccessful })
     }, [chatHistory]);
 
     useEffect(() => {
-        if (isLoginSuccessful) {
-            fetchChatSessions();
-            setChatHistory([]);
-            startNewChatSession();
-            fetchUser();
-        } else {
-            setChatHistory([]);
-            setChats([]);
-        }
-    }, [isLoginSuccessful]);
+        async function initialize() {
+            if (isLoginSuccessful && !hasInitialized) {
+                setHasInitialized(true); 
+                await fetchUser();
+                const sessions = await fetchChatSessions();
+                console.log("session", sessions)
+                const last = sessions[sessions.length - 1];
+                console.log("last", last)
     
+                if (last && last.length === 0) {
+                    setChatHistory(last);
+                } else {
+                    await startNewChatSession();
+                }
+            } else if (!isLoginSuccessful) {
+                setChatHistory([]);
+                setChats([]);
+                setHasInitialized(false);
+            }
+        }
+        initialize();
+    }, [isLoginSuccessful, hasInitialized]);
     
     useEffect(() => {
         fetchUser();
@@ -60,7 +74,6 @@ function MainContent({ user, setUser, isLoginSuccessful, setIsLoginSuccessful })
         const data = await response.json();
         if (response.ok) {
             setUser(data);
-            console.log(data);
             setIsLoginSuccessful(true);
         } else {
             setIsLoginSuccessful(false);
@@ -68,8 +81,99 @@ function MainContent({ user, setUser, isLoginSuccessful, setIsLoginSuccessful })
         }
         } catch (error) {
             console.error('Error fetching user:', error);
+        }
+    };
+
+    async function startNewChatSession() {
+        
+        try {
+            
+                const response = await fetch('https://stale-melodie-aaronmarayaa-f2e40747.koyeb.app/api/chats/new-chat', { 
+                    method: 'POST',
+                    credentials: 'include'
+                });
+                if (!response.ok) throw new Error('Session creation failed');
+                setChatHistory([]);
+                fetchChatSessions();
+            
+        } catch (error) {
+            console.error('Error starting new session:', error);
+        }
+    }
+
+    async function fetchChatSessions() {
+        try {
+            const response = await fetch('https://stale-melodie-aaronmarayaa-f2e40747.koyeb.app/api/chats/getChat', {
+                method: 'GET',
+                credentials: 'include'
+            });
+            const data = await response.json();
+            setChats(data); 
+            if (!response.ok) throw new Error('Failed to fetch chats');
+            return data;
+        } catch (error) {
+            console.error('Error fetching chats:', error);
+        }
+    }
+
+    const deleteChat = async (index) => {
+        try {
+            const response = await fetch('https://stale-melodie-aaronmarayaa-f2e40747.koyeb.app/api/chats/deleteChat', {
+                method: 'DELETE',
+                body: JSON.stringify({ index }),
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                credentials: 'include'
+            });
+            const data = await response.json();
+            if (data.message) {
+                const updatedChats = chats.filter((_, i) => i !== index);
+                setChats(updatedChats);
+            } else {
+                console.error('Failed to delete chat:', data.message || data.error);
+            }
+        } catch (error) {
+            console.error('Error deleting chat:', error);
+        }
+    };
+
+    const confirmDeleteChat = async () => {
+        if (selectedChatIndex !== null) {
+            await deleteChat(selectedChatIndex);
+            setShowDeleteModal(false);
+            setShowDeleteSuccess(true);
+            setSelectedChatIndex(null);
+        }
+    };
+    
+
+    const analyzePdf = async (e) => {
+        e.preventDefault();
+        if (!pdfFile) return;
+        setLoading(true);
+
+        const newEntry = { question, answer: '...' };
+        setChatHistory(prev => [...prev, newEntry]);
+
+        setQuestion('');
+        const formData = new FormData();
+        formData.append('file', pdfFile);
+        formData.append('question', question);
+
+        try {
+            const response = await fetch('https://stale-melodie-aaronmarayaa-f2e40747.koyeb.app/api/tusk/ask-pdf', { 
+                method: 'POST', body: formData, credentials: 'include'
+            });
+            if (!response.ok) throw new Error('Server error');
+            const data = await response.json();
+            const updatedHistory = data.chatHistory;
+            setChatHistory(updatedHistory);
+            fetchChatSessions();
+        } catch (error) {
+            console.error('Error:', error);
         } finally {
-            setIsCheckingAuth(false);
+            setLoading(false);
         }
     };
 
@@ -105,127 +209,32 @@ function MainContent({ user, setUser, isLoginSuccessful, setIsLoginSuccessful })
         }
     };
 
-    async function startNewChatSession() {
-        const lastSession = chats[chats.length - 1];
-        if (lastSession && lastSession.length === 0) {
-            setChatHistory(lastSession);
-            return;
-        }
-        try {
-            const response = await fetch('https://stale-melodie-aaronmarayaa-f2e40747.koyeb.app/api/chats/new-chat', { 
-                method: 'POST',
-                credentials: 'include'
-            });
-            if (!response.ok) throw new Error('Session creation failed');
-            setChatHistory([]);
-            fetchChatSessions();
-        } catch (error) {
-            console.error('Error starting new session:', error);
-        }
-    }
-
-    async function fetchChatSessions() {
-            try {
-            const response = await fetch('https://stale-melodie-aaronmarayaa-f2e40747.koyeb.app/api/chats/getChat', {
-                method: 'GET',
-                credentials: 'include'
-            });
-            const data = await response.json();
-            setChats(data); 
-            if (!response.ok) throw new Error('Failed to fetch chats');
-            setChats(await data);
-            } catch (error) {
-            console.error('Error fetching chats:', error);
-            }
-        
-    }
-
-    const deleteChat = async (index) => {
-        try {
-            const response = await fetch('https://stale-melodie-aaronmarayaa-f2e40747.koyeb.app/api/chats/deleteChat', {
-                method: 'DELETE',
-                body: JSON.stringify({ index }),
-                credentials: 'include'
-            });
-            const data = await response.json();
-            if (data.message) {
-                const updatedChats = chats.filter((_, i) => i !== index);
-                setChats(updatedChats);
-            } else {
-                console.error('Failed to delete chat:', data.message || data.error);
-            }
-        } catch (error) {
-            console.error('Error deleting chat:', error);
-        }
-    };
-
-    const analyzePdf = async (e) => {
-        e.preventDefault();
-        if (!pdfFile) return;
-        setLoading(true);
-
-        const newEntry = { question, answer: '...' };
-        setChatHistory(prev => [...prev, newEntry]);
-
-        setQuestion('');
-        const formData = new FormData();
-        formData.append('file', pdfFile);
-        formData.append('question', question);
-
-        try {
-            const response = await fetch('https://stale-melodie-aaronmarayaa-f2e40747.koyeb.app/api/tusk/ask-pdf', { 
-                method: 'POST', body: formData, credentials: 'include'
-            });
-            if (!response.ok) throw new Error('Server error');
-            const data = await response.json();
-            const updatedHistory = data.chatHistory;
-            setChatHistory(updatedHistory);
-            fetchChatSessions();
-        } catch (error) {
-            console.error('Error:', error);
-        } finally {
-            setLoading(false);
-        }
-    };
-
     if (isLoginSuccessful && !user) {
         return <p className="text-center text-gray-500">Checking authentication...</p>;
     }
 
-    if (isCheckingAuth) {
-        return <div className='w-full text-center text-gray-500'>Loading...</div>; 
-    }
-    
-
     return (
         <main className="flex items-center justify-center flex-grow p-4 bg-gradient-to-b from-black to-gray-900 min-h-screen">
-            <section className='flex w-full mt-15  transition-all duration-300 ease-in-out'>
-                <aside className={`h-full relative self-start flex flex-col transition-all duration-300 ease-in-out overflow-hidden ${isSidebarOpen ? 'w-64' : 'w-0 p-0'}`}>
-                    <div className='w-50 flex'>
-                        <button
-                            onClick={() => setIsSidebarOpen(false)}
-                            className="text-xs w-7 h-full text-white hover:text-red-400 mb-4"
-                        >
-                            <img src={'/closeSidebar.png'} className='w-7 h-full'/>
-                        </button>
-                            <button onClick={startNewChatSession} className="text-sm w-40 h-9 flex flex-col">
-                                <img src={'/images/chat.png'} className='w-7 h-7 self-end'/>
-                            </button>
-                    </div>
-                    {chats.map((session, index) => (
-                        <div key={index} className='overflow-hidden flex items-center'>
-                        <span
-                            className="p-2 my-1 w-50 cursor-pointer w-full hover:bg-gray-800 rounded"
-                            onClick={() => {
-                                setChatHistory(chats[index]);
-                                setCurrentTitle(session[0]?.title || `Chat ${index + 1}`);
-                            }}
-                        >
-                            <p className='truncate text-sm'>{session[0]?.title || `Chat ${index + 1}`}</p>
-                        </span>
-                        </div>
-                    ))}
-                </aside>
+            <section className='flex w-full mt-15 transition-all duration-300 ease-in-out'>
+                <Sidebar
+                    chats={chats}
+                    setChatHistory={setChatHistory}
+                    setCurrentTitle={setCurrentTitle}
+                    deleteChat={(index) => {
+                        setSelectedChatIndex(index);
+                        setShowDeleteModal(true);
+                    }}
+                    isSidebarOpen={isSidebarOpen}
+                    startNewChatSession={startNewChatSession}
+                    setIsSidebarOpen={setIsSidebarOpen}
+                />
+                <div className="flex items-center justify-center z-4  absolute m-auto left-0 right-0">
+                    {showDeleteModal && (
+                        <ChatDeleteModal onConfirm={confirmDeleteChat} onCancel={() => setShowDeleteModal(false)}/>
+                    )}
+
+                    {showDeleteSuccess && ( <DeleteModalSuccess onClose={() => setShowDeleteSuccess(false)} /> )}
+                </div>
 
                 <article className='flex items-center relative justify-center w-full h-full relative'>
                     {!isSidebarOpen && (
@@ -244,12 +253,15 @@ function MainContent({ user, setUser, isLoginSuccessful, setIsLoginSuccessful })
                         
                     )}
 
-                    <section className="">
+                    <section className="w-full">
+                        <div>
+                            {(currentTitle && isLoginSuccessful)}
+                        </div>
                         <div className="overflow-y-scroll w-full px-60 h-[40rem]">
                             {chatHistory.length === 0 && (
                                 <div className="text-center text-gray-400 mt-10 text-lg">
                                     {isLoginSuccessful && (
-                                    <div className="text-center text-gray-400 mt-10">
+                                        <div className="text-center text-gray-400 mt-10">
                                         <div className="text-6xl h-20 font-bold bg-gradient-to-r from-blue-500 via-purple-500 to-pink-500 bg-clip-text text-transparent">
                                             {user == null ? '' : `Hello, ${user.username}`}
                                         </div>
