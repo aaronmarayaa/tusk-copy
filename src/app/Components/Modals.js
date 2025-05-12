@@ -3,7 +3,7 @@ import { useAutoClose } from './UseAutoClose';
 
 export function LogoutModal({ setShowLogoutModal, handleLogout }) {
     return (
-        <main className="fixed inset-0 bg-gray-800/50 backdrop-blur-xs flex items-center justify-center z-3">
+        <main className="fixed inset-0 bg-gray-800/50 backdrop-blur-xs flex items-center justify-center z-50">
             <section className="bg-gray-800 p-6 rounded-lg border border-purple-600 text-white max-w-sm w-full">
                 <h2 className="text-xl font-semibold mb-4">Confirm Logout</h2>
                 <p className="mb-6">Are you sure you want to log out?</p>
@@ -54,42 +54,42 @@ export function ChatDeleteModal({ onConfirm, onCancel }) {
 export const DeleteModalSuccess = ({ onClose }) => {
     useAutoClose(onClose);
     return (
-        <ModalContent icon="/check.png" text="Chat Deleted" onClose={onClose} />
+        <ModalContent icon="/images/check.png" text="Chat Deleted" onClose={onClose} />
     );
 };
 
 export const SignUpModalSuccess = ({ onClose }) => {
     useAutoClose(onClose);
     return (
-        <ModalContent icon="/check.png" text="Sign Up Successful" onClose={onClose} />
+        <ModalContent icon="/images/check.png" text="Sign Up Successful" onClose={onClose} />
     );
 };
 
 export const SignUpModalFailed = ({ onClose }) => {
     useAutoClose(onClose);
     return (
-        <ModalContent icon="/cancel.png" text="Sign Up Failed" onClose={onClose} />
+        <ModalContent icon="/images/cancel.png" text="Sign Up Failed" onClose={onClose} />
     );
 };
 
 export const LoginModalSuccess = ({ onClose }) => {
     useAutoClose(onClose);
     return (
-        <ModalContent icon="/check.png" text="Login Successful" onClose={onClose} />
+        <ModalContent icon="/images/check.png" text="Login Successful" onClose={onClose} />
     );
 };
 
 export const LoginModalFailed = ({ onClose }) => {
     useAutoClose(onClose);
     return (
-        <ModalContent icon="/cancel.png" text="Login Failed" onClose={onClose} />
+        <ModalContent icon="/images/cancel.png" text="Login Failed" onClose={onClose} />
     );
 };
 
 export const LogoutModalSuccess = ({ onClose }) => {
     useAutoClose(onClose);
     return (
-        <ModalContent icon="/logout.png" text="Logged out" onClose={onClose} />
+        <ModalContent icon="/images/logout.png" text="Logged out" onClose={onClose} />
     );
 };
 

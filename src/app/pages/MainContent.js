@@ -1,24 +1,22 @@
 'use client';
 
-import { Paperclip, Send, X, Bot } from 'lucide-react';
+import { TextArea } from '../Components/TextArea';
 import { useState, useRef, useEffect } from 'react';
 import MarkdownResponse from '../Components/MarkdownResponse';
 import Sidebar from '../Components/Sidebar';
 import { ChatDeleteModal, DeleteModalSuccess } from '../Components/Modals';
 
-function MainContent({ user, setUser, isLoginSuccessful, setIsLoginSuccessful }) {
+function MainContent({ user, setUser, isLoginSuccessful, setIsLoginSuccessful}) {
     const [chatHistory, setChatHistory] = useState([]);
     const [pdfFile, setPdfFile] = useState(null);
     const [loading, setLoading] = useState(false);
     const [question, setQuestion] = useState('');
     const [chats, setChats] = useState([]);
-    const [currentTitle, setCurrentTitle] = useState('');
     const [isSidebarOpen, setIsSidebarOpen] = useState(false);
     const [showDeleteModal, setShowDeleteModal] = useState(false);
     const [showDeleteSuccess, setShowDeleteSuccess] = useState(false);
     const [selectedChatIndex, setSelectedChatIndex] = useState(null);
     const [hasInitialized, setHasInitialized] = useState(false);
-
 
     const textareaRef = useRef(null);
     const bottomRef = useRef(null);
@@ -42,20 +40,14 @@ function MainContent({ user, setUser, isLoginSuccessful, setIsLoginSuccessful })
             if (isLoginSuccessful && !hasInitialized) {
                 setHasInitialized(true); 
                 await fetchUser();
-                const sessions = await fetchChatSessions();
-                console.log("session", sessions)
-                const last = sessions[sessions.length - 1];
-                console.log("last", last)
-    
-                if (last && last.length === 0) {
-                    setChatHistory(last);
-                } else {
-                    await startNewChatSession();
-                }
+                await fetchChatSessions();
+                setPdfFile(null);
+                await startNewChatSession();
             } else if (!isLoginSuccessful) {
                 setChatHistory([]);
                 setChats([]);
                 setHasInitialized(false);
+                setPdfFile(null);
             }
         }
         initialize();
@@ -87,7 +79,14 @@ function MainContent({ user, setUser, isLoginSuccessful, setIsLoginSuccessful })
     async function startNewChatSession() {
         
         try {
-            
+            const sessions = await fetchChatSessions();
+                console.log("session", sessions)
+                const last = sessions[sessions.length - 1];
+                console.log("last", last)
+    
+                if (last && last.length === 0) {
+                    setChatHistory(last);
+                } else {
                 const response = await fetch('https://stale-melodie-aaronmarayaa-f2e40747.koyeb.app/api/chats/new-chat', { 
                     method: 'POST',
                     credentials: 'include'
@@ -95,7 +94,7 @@ function MainContent({ user, setUser, isLoginSuccessful, setIsLoginSuccessful })
                 if (!response.ok) throw new Error('Session creation failed');
                 setChatHistory([]);
                 fetchChatSessions();
-            
+                }
         } catch (error) {
             console.error('Error starting new session:', error);
         }
@@ -146,7 +145,6 @@ function MainContent({ user, setUser, isLoginSuccessful, setIsLoginSuccessful })
             setSelectedChatIndex(null);
         }
     };
-    
 
     const analyzePdf = async (e) => {
         e.preventDefault();
@@ -216,18 +214,19 @@ function MainContent({ user, setUser, isLoginSuccessful, setIsLoginSuccessful })
     return (
         <main className="flex items-center justify-center flex-grow p-4 bg-gradient-to-b from-black to-gray-900 min-h-screen">
             <section className='flex w-full mt-15 transition-all duration-300 ease-in-out'>
-                <Sidebar
-                    chats={chats}
-                    setChatHistory={setChatHistory}
-                    setCurrentTitle={setCurrentTitle}
-                    deleteChat={(index) => {
-                        setSelectedChatIndex(index);
-                        setShowDeleteModal(true);
-                    }}
-                    isSidebarOpen={isSidebarOpen}
-                    startNewChatSession={startNewChatSession}
-                    setIsSidebarOpen={setIsSidebarOpen}
-                />
+                {isLoginSuccessful && (
+                    <Sidebar
+                        chats={chats}
+                        setChatHistory={setChatHistory}
+                        deleteChat={(index) => {
+                            setSelectedChatIndex(index);
+                            setShowDeleteModal(true);
+                        }}
+                        isSidebarOpen={isSidebarOpen}
+                        startNewChatSession={startNewChatSession}
+                        setIsSidebarOpen={setIsSidebarOpen}
+                    />
+                )}
                 <div className="flex items-center justify-center z-4  absolute m-auto left-0 right-0">
                     {showDeleteModal && (
                         <ChatDeleteModal onConfirm={confirmDeleteChat} onCancel={() => setShowDeleteModal(false)}/>
@@ -239,14 +238,15 @@ function MainContent({ user, setUser, isLoginSuccessful, setIsLoginSuccessful })
                 <article className='flex items-center relative justify-center w-full h-full relative'>
                     {!isSidebarOpen && (
                         <div className='flex gap-2 absolute top-0 left-0 '>
-                            
-                            <button
-                                onClick={() => setIsSidebarOpen(true)}
-                                className="self-start text-white text-xs hover:text-green-400"
-                            >
-                                <img src={'/openSidebar.png'} className='w-7'/>
-                            </button>
-                            <button className="text-sm w-50 text-white border border-purple-500 px-6 py-1 rounded hover:bg-purple-900/50 transition-colors">
+                            {isLoginSuccessful && (
+                                <button
+                                    onClick={() => setIsSidebarOpen(true)}
+                                    className="self-start text-white text-xs hover:text-green-400"
+                                >
+                                    <img src={'/images/openSidebar.png'} className='w-7'/>
+                                </button>
+                            )}
+                            <button onClick={() => { isLoginSuccessful ? startNewChatSession : setChatHistory([])}} className="text-sm w-50 text-white border border-purple-500 px-6 py-1 rounded hover:bg-purple-900/50 transition-colors">
                                 New Chat
                             </button>
                         </div>
@@ -254,10 +254,7 @@ function MainContent({ user, setUser, isLoginSuccessful, setIsLoginSuccessful })
                     )}
 
                     <section className="w-full">
-                        <div>
-                            {(currentTitle && isLoginSuccessful)}
-                        </div>
-                        <div className="overflow-y-scroll w-full px-60 h-[40rem]">
+                        <div className="overflow-y-scroll w-full px-60 h-[40rem] custom-scrollbar">
                             {chatHistory.length === 0 && (
                                 <div className="text-center text-gray-400 mt-10 text-lg">
                                     {isLoginSuccessful && (
@@ -286,51 +283,18 @@ function MainContent({ user, setUser, isLoginSuccessful, setIsLoginSuccessful })
                     </section>
 
                     <section className="absolute bottom-0 left-0 right-0 flex justify-center px-4">
-                        <div className="w-full max-w-2xl bg-gray-800/50 backdrop-blur-sm rounded-xl border border-gray-700 p-1 shadow-lg">
-                            {pdfFile && (
-                                <p className="flex gap-5 items-center text-sm text-gray-600 mt-2 mb-4 ml-3 truncate mb-2">
-                                {pdfFile.name}
-                                <X className='w-4' 
-                                    onClick={() => {
-                                        setPdfFile(null);
-                                        if(fileInputRef.current) {
-                                            fileInputRef.current.value = '';
-                                        }
-                                    }}
-                                />
-                                </p>
-                            )}
-                            <form onSubmit={isLoginSuccessful ? analyzePdf : analyzePdfNoLogin}>
-                                <div className="flex items-end">
-                                    <div className="flex-grow flex items-center bg-gray-700/50 rounded-lg pr-2">
-                                        <textarea
-                                            ref={textareaRef}
-                                            value={question}
-                                            onChange={(e) => setQuestion(e.target.value)}
-                                            placeholder="Message Tusk AI..."
-                                            className="w-full bg-transparent text-white focus:outline-none resize-none max-h-50 py-3 px-4"
-                                            rows={1}
-                                        />
-                                        <input ref={fileInputRef} id='file-upload' type="file" accept=".pdf" onChange={(e) => setPdfFile(e.target.files[0])} hidden required/>
-                                        <label htmlFor="file-upload" className="cursor-pointer p-2 text-gray-400 hover:text-purple-400 transition-colors">
-                                        <Paperclip className="w-5 h-5" />
-                                        </label>
-                                    </div>
-                                    
-                                    <button type='submit'
-                                        className={`ml-2 p-3 rounded-lg ${chatHistory ? 'bg-purple-600 hover:bg-purple-700' : 'bg-gray-600 cursor-not-allowed'} transition-colors`}
-                                        disabled={loading}
-                                    >
-                                        <Send className="w-5 h-5 text-white" />
-                                    </button>
-                                        
-                                    
-                                </div>
-                            </form>
-                            <p className="text-xs text-gray-500 mt-2 px-2">
-                                Tusk AI may produce inaccurate information. Consider verifying important details.
-                            </p>
-                        </div>
+                        <TextArea pdfFile={pdfFile}
+                            setPdfFile={setPdfFile}
+                            isLoginSuccessful={isLoginSuccessful}
+                            analyzePdf={analyzePdf}
+                            analyzePdfNoLogin={analyzePdfNoLogin}
+                            textareaRef={textareaRef}
+                            question={question}
+                            setQuestion={setQuestion}
+                            fileInputRef={fileInputRef}
+                            chatHistory={chatHistory}
+                            loading={loading}
+                        />
                     </section>
                 </article>
             </section>
