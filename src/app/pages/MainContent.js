@@ -129,6 +129,7 @@ function MainContent({ user, setUser, isLoginSuccessful, setIsLoginSuccessful}) 
             if (data.message) {
                 const updatedChats = chats.filter((_, i) => i !== index);
                 setChats(updatedChats);
+                setChatHistory([]);
             } else {
                 console.error('Failed to delete chat:', data.message || data.error);
             }
